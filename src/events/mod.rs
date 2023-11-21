@@ -1,3 +1,11 @@
+//! Module for dependency injected events & listeners.
+//!
+//! Event consists of input, execution context and output.
+//! Input is shared by all listeners, context can be shared or separated, output is the combined result of all listeners.
+//! Strategy dictates how context is created and turned into output, as well as how handlers are executed.
+//!
+//! The module provides a generic-agnostic event handler storage.
+
 pub mod dispatch;
 pub mod event;
 pub mod listener;
