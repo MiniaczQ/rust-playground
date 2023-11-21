@@ -1,5 +1,8 @@
+use async_trait::async_trait;
+
 use super::event::Event;
 
-pub trait EventHandler<E: Event> {
-    fn handle(&self, ctx: &mut E::Context, event: &E);
+#[async_trait]
+pub trait EventListener<E: Event>: Send + Sync {
+    async fn handle(&self, ctx: &mut E::Context, event: &E);
 }
