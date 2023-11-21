@@ -40,13 +40,18 @@ mod tests {
     }
 
     #[async_trait]
-    impl AsyncDispatchStrategy<FooBarEvent> for AsyncListenerStorage {
-        async fn dispatch(&self, event: &FooBarEvent) -> <FooBarEvent as Event>::Output {
-            let handlers = self.get::<FooBarEvent>();
+    impl AsyncDispatchStrategy for FooBarEvent {
+        async fn dispatch<'a>(
+            &self,
+            handlers: impl Iterator<Item = &'a Box<dyn AsyncListener<Self>>> + Send + Sync,
+        ) -> Self::Output
+        where
+            Self: 'a,
+        {
             let mut ctx: String = String::new();
 
             for handler in handlers {
-                handler.handle(&mut ctx, event).await;
+                handler.handle(&mut ctx, self).await;
             }
 
             ctx
@@ -55,16 +60,16 @@ mod tests {
 
     #[tokio::test]
     async fn test() {
-        let mut handlers = AsyncListenerStorage::default();
-        handlers.add(FooBarEventHandler);
-        handlers.add(FooBarEventHandler);
+        let mut storage = AsyncListenerStorage::default();
+        storage.add(FooBarEventHandler);
+        storage.add(FooBarEventHandler);
 
-        let result = handlers
-            .dispatch(&FooBarEvent {
-                foo: "a".to_owned(),
-                bar: 7,
-            })
-            .await;
+        let event = FooBarEvent {
+            foo: "a".to_owned(),
+            bar: 7,
+        };
+        let handlers = storage.get::<FooBarEvent>();
+        let result = event.dispatch(handlers.iter()).await;
 
         assert_eq!(result, "7-a 7-a ");
     }

@@ -1,4 +1,4 @@
-pub trait Event {
+pub trait Event: Sized {
     type Context;
     type Output;
 }

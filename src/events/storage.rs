@@ -10,7 +10,7 @@ pub struct AsyncListenerStorage {
     storage: HashMap<TypeId, Box<dyn Any + Send + Sync>>,
 }
 
-type EventHandlerVec<E> = Vec<Box<dyn AsyncListener<E>>>;
+type AsyncHandlerVec<E> = Vec<Box<dyn AsyncListener<E>>>;
 
 impl AsyncListenerStorage {
     pub fn add<E: Event + 'static>(&mut self, handler: impl AsyncListener<E> + 'static) {
@@ -19,7 +19,7 @@ impl AsyncListenerStorage {
             .storage
             .entry(type_id)
             .or_insert_with(|| Box::<Vec<Box<dyn AsyncListener<E>>>>::default())
-            .downcast_mut::<EventHandlerVec<E>>()
+            .downcast_mut::<AsyncHandlerVec<E>>()
             .unwrap();
         handlers.push(Box::new(handler));
     }
@@ -29,7 +29,7 @@ impl AsyncListenerStorage {
         self.storage
             .get(&type_id)
             .map(|handlers| {
-                handlers.downcast_ref::<EventHandlerVec<E>>().unwrap()
+                handlers.downcast_ref::<AsyncHandlerVec<E>>().unwrap()
                     as &[Box<dyn AsyncListener<E>>]
             })
             .unwrap_or(&[])
