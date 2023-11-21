@@ -1,3 +1,4 @@
+pub mod dispatch;
 pub mod event;
 pub mod listener;
 pub mod storage;
@@ -7,9 +8,8 @@ mod tests {
     use async_trait::async_trait;
 
     use super::{
-        event::{Event, EventDispatchStrategy},
-        listener::EventListener,
-        storage::EventHandlerStorage,
+        dispatch::AsyncDispatchStrategy, event::Event, listener::AsyncListener,
+        storage::AsyncListenerStorage,
     };
 
     pub struct FooBarEvent {
@@ -25,14 +25,14 @@ mod tests {
     struct FooBarEventHandler;
 
     #[async_trait]
-    impl EventListener<FooBarEvent> for FooBarEventHandler {
+    impl AsyncListener<FooBarEvent> for FooBarEventHandler {
         async fn handle(&self, ctx: &mut <FooBarEvent as Event>::Context, event: &FooBarEvent) {
             *ctx = format!("{}{}-{} ", ctx, event.bar, event.foo);
         }
     }
 
     #[async_trait]
-    impl EventDispatchStrategy<FooBarEvent> for EventHandlerStorage {
+    impl AsyncDispatchStrategy<FooBarEvent> for AsyncListenerStorage {
         async fn dispatch(&self, event: &FooBarEvent) -> <FooBarEvent as Event>::Output {
             let handlers = self.get::<FooBarEvent>();
             let mut ctx: String = String::new();
@@ -47,7 +47,7 @@ mod tests {
 
     #[tokio::test]
     async fn test() {
-        let mut handlers = EventHandlerStorage::default();
+        let mut handlers = AsyncListenerStorage::default();
         handlers.add(FooBarEventHandler);
         handlers.add(FooBarEventHandler);
 
